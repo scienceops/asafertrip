@@ -1,5 +1,7 @@
 .sass-cache
 *.css.map
+*.iml
+*.idea
 
 client/node_modules
 /client/dist
