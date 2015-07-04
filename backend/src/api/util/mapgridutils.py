@@ -399,10 +399,45 @@ def fudgeFromCentroids():
 
 
 #create the csvs from the ABS data
-#def createABS(f):
+def createABS(f):
     #read in the lat,lon,...vals... data
-    #data = open(f)
+    data = open(f)
+    lonsteps = mapGrid.getSuggestedLonStepsForGivenLonstepSize(GRIDSIZE, b1, b2)
+    print "  Suggested number of lon steps for grid size of "+str(GRIDSIZE)+"m is "+str(lonsteps) 
+    mgrid = mapGrid(b1, b2, lonsteps)
+
+    restod = numpy.zeros((mgrid.latsteps, mgrid.lonsteps),float)
+    reskid = numpy.zeros((mgrid.latsteps, mgrid.lonsteps),float)
+    resold = numpy.zeros((mgrid.latsteps, mgrid.lonsteps),float)
+    count = 0
+    tcount = 0
+    for line in data.readlines()[1:]:
+        print "Doing "+str(count+1)
+        bits = line.strip().split(",")
+        lat, lon = float(bits[-2]), float(bits[-1])
+        lati, loni = mgrid.getIndices(lat, lon)        
+
+        toddlers, kids, seniors = map(float, bits[:3])
+        tcount += toddlers
+        print str(tcount)
+        restod[lati][loni] += toddlers
+        reskid[lati][loni] += kids
+        resold[lati][loni] += seniors
+        count += 1
+        
+
+    #ok, now dump out the csv in 'natural' format
+    for (f, mg) in [("babies.csv", restod), ("kids.csv", reskid), ("senior.csv", resold)]:
+        outf = open(f, "w")
+        for lati in range(0, mgrid.latsteps):
+            line = ",".join(map(str, mg[lati]))
+            outf.write(line+"\n")
+        outf.close()
+    
 
 
 
 #oldTest()
+
+
+createABS("sa1-toddlers-kids-seniors-grid.csv")
