@@ -10,7 +10,13 @@
                            {sampleUrl: "resources/cow.wav", startTime: 5000, sentence:"sentence 3"},
                            {sampleUrl: "resources/cat.wav", startTime: 7000, sentence:"sentence 4"}
                           ];
-				  }
+				  },
+				setLocations: function (locations) {
+					this.locations = locations;
+				},
+				getLocations: function () {
+					return this.locations;
+				}
 			}
 		}]);
 })();

@@ -2,7 +2,8 @@
     'use strict';
 
 	angular.module('asafertrip')
-		.controller('MusicController', ['$scope', 'musicServices', 'audioBufferServices', '$timeout', '$interval', function ($scope, musicServices, audioBufferServices, $timeout, $interval) {
+		.controller('MusicController', ['$scope', 'musicServices', 'audioBufferServices', '$timeout', '$interval',
+			function ($scope, musicServices, audioBufferServices, $timeout, $interval) {
 
 			var progress;
             var init = function()  {
@@ -10,6 +11,7 @@
         		$scope.locations = {};
 				$scope.musics= musicServices.getData();
 				$scope.increaseWidth = 0;
+				$scope.locations = musicServices.getLocations();
 
 				audioBufferServices.playSound($scope.musics);
 				sequenceSentences($scope.musics);

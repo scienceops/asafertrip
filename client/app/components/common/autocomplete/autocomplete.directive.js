@@ -8,7 +8,7 @@
 					marker: '@'
 				},
 				link: function (scope, elem) {
-					console.log('autocomplete! ', scope.marker);
+
 					var autocomplete = new google.maps.places.Autocomplete(elem[0]);
 
 					google.maps.event.addListener(autocomplete, 'place_changed', function() {

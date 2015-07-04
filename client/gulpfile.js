@@ -41,7 +41,7 @@ var gulp = require('gulp'),
 			styles: env.dev + '/**/*.less',
 			fonts: env.dev + '/fonts/**/*',
 			images: env.dev + '/images/**/*',
-			html: env.dev + '/**/*.html',
+			html: env.dev + '/components/**/*.html',
 			host: '0.0.0.0',
 			port: {
 				app: 9090,
@@ -214,9 +214,10 @@ gulp.task('build-fonts', function () {
 });
 
 gulp.task('build-html', function () {
+	console.log(config.html);
 	return gulp.src(config.html)
 		.pipe(minifyHTML())
-		.pipe(gulp.dest(config.env.prod));
+		.pipe(gulp.dest(config.env.prod + '/components'));
 });
 
 gulp.task('build-static', function () {

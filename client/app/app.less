@@ -1,11 +1,32 @@
 //== Getting Bootstrap less files and overriding with our own values
 @import "less/bootstrap";
+@import "less/variables";
 
 @import "components/common/maps/maps";
+@import "components/direction/direction";
 
+
+body:after {
+	content: "";
+	background: url('/images/r_background_mob.jpg') no-repeat 0 0;
+	-webkit-background-size: 100%;
+	background-size: 100%;
+	opacity: 0.5;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	position: absolute;
+	z-index: -1;
+}
 
 .container {
 	margin-top: 30px;
+}
+
+.jumbotron {
+	background-color: white;
+	border-color: white;
 }
 
 

@@ -6,7 +6,6 @@
 *.pyc
 
 client/node_modules
-/client/dist
 /client/.tmp
 /client/.idea
 /client/bower_components

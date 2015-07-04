@@ -41,6 +41,10 @@
 								if (status === google.maps.DirectionsStatus.OK) {
 									hideMarkers();
 									directionsDisplay.setDirections(response);
+
+									var leg = response.routes[ 0 ].legs[ 0 ];
+									createMarker( 'origin', leg.start_location);
+									createMarker( 'destination', leg.end_location);
 								}
 							});
 						}
@@ -52,8 +56,10 @@
 						markers[marker] = new google.maps.Marker({
 							position: location,
 							map: map,
-							title: marker
+							title: marker,
+							icon: {url: 'images/pin-' + marker + '.png' }
 						});
+
 					};
 
 					var hideMarkers = function () {
@@ -71,7 +77,7 @@
 							zoom: 8
 						};
 
-						directionsDisplay = new google.maps.DirectionsRenderer();
+						directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
 						map = new google.maps.Map(document.getElementById('maps'), mapOptions);
 						directionsDisplay.setMap(map);
 

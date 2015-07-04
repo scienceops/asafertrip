@@ -1,32 +1,44 @@
-<form class="form-horizontal">
-	<div class="form-group">
-		<label class="col-sm-2 control-label" for="origin">Take me from</label>
-		<div class="col-sm-6">
-			<input
-				id="origin"
-				class="form-control"
-				type="text"
-				google-autocomplete
-				marker="origin"
-				ng-model="locations.origin"
-				ng-model-options="{ updateOn: 'blur' }"
-				placeholder="here"/>
-		</div>
+<div class="row input-selection">
+	<div class="col-xs-10">
+		<form class="form-horizontal">
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="origin">Take me from</label>
+				<div class="col-sm-6">
+					<input
+						id="origin"
+						class="form-control"
+						type="text"
+						google-autocomplete
+						marker="origin"
+						ng-model="locations.origin"
+						ng-model-options="{ updateOn: 'blur' }"
+						placeholder="here"/>
+				</div>
+			</div>
+			<div class="form-group"
+				 ng-show="locations.origin">
+				<label class="col-sm-2 control-label" for="destination">To</label>
+				<div class="col-sm-6">
+					<input
+						id="destination"
+						class="form-control"
+						type="text"
+						ng-model="locations.destination"
+						google-autocomplete
+						marker="destination"
+						placeholder="here"/>
+				</div>
+			</div>
+		</form>
 	</div>
-	<div class="form-group"
-		 ng-show="locations.origin">
-		<label class="col-sm-2 control-label" for="destination">To</label>
-		<div class="col-sm-6">
-			<input
-				id="destination"
-				class="form-control"
-				type="text"
-				ng-model="locations.destination"
-				google-autocomplete
-				marker="destination"
-				placeholder="here"/>
-		</div>
+	<div class="col-xs-2">
+		<button type="button"
+				class="btn btn-default"
+				ng-click="submitLocations()"
+				ng-if="locations.destination && locations.origin">
+			<div class="glyphicon glyphicon-music"></div>
+		</button>
 	</div>
-</form>
+</div>
 
 <google-maps></google-maps>
