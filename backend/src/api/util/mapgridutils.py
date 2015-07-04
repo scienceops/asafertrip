@@ -7,7 +7,6 @@ Created on Fri Jul 3rd 11:00:05 2015
 
 
 import sys
-import networkx
 import numpy
 import json
 import math
