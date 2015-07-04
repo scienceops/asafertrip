@@ -16,8 +16,11 @@ CORS(app, resources=r'/api/*', allow_headers='Content-Type')
 
 @app.route("/aggregate", methods=['POST'])
 def aggregate():
+    print "Getting path for GoogleMaps request"
     path = gmaps.get_path(request.get_json())
+    print "Generate response using calcPathIntegral"
     resp = generate_resp(TABLES, path, calcPathIntegral)
+    print "Generate json response"
     return json.dumps(resp)
 
 @app.route("/test")
