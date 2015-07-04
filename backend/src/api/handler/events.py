@@ -1,8 +1,8 @@
 # coding=utf-8
+from numpy.random import randint
 
 SOUNDSCAPE_LENGTH = 30000
 
-# coding=utf-8
 weather_msg = {'str_template': 'It’s {} today',
                'rainy_sample': '',
                'windy_sample': '',
@@ -59,6 +59,24 @@ stat_msgs = {'death': {'str_template': '{} road fatalities',
 #              'threshold': 0.5,
 #              'sequence_num': 8}}
 
+def handle_weather(period):
+    rand_int = randint(0, high=3)
+
+    if rand_int is 0:
+        sample = weather_msg['rainy_sample']
+        weather_str = "rainy"
+    elif rand_int is 1:
+        sample = weather_msg['windy_sample']
+        weather_str = "windy"
+    else:
+        sample = weather_msg['sunny_sample']
+        weather_str = "sunny"
+
+    sentence = weather_msg['str_template'].format(weather_str)
+    time = period * weather_msg['sequence_num']
+
+    return {'sentence': sentence, 'startTime': time, 'sampleUrl': sample}
+
 def generate_resp(tables, path, integrator):
     names = stat_msgs.keys()
     sequence_nos = [stat_msgs[name]['sequence_num'] for name in names]
@@ -68,7 +86,8 @@ def generate_resp(tables, path, integrator):
 
     aggregates = {name: integrator(path, tables[name]) for name in names}
 
-    resp = []
+    resp = [handle_weather(period)]
+
     for name, aggregate in aggregates.iteritems():
         msg = stat_msgs[name]
         sentence_plural = msg['str_template'].format(int(aggregate))
