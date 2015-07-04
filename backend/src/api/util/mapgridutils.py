@@ -407,8 +407,3 @@ def fudgeFromCentroids():
 
 fudgeFromCentroids()
 
-#pathstr = open("path2.txt").readlines()
-#path = [map(float, line.split()) for line in pathstr]
-#testServer(path)
-
-

@@ -6,12 +6,12 @@ def get_path(path_data):
     return path
 
 def get_leg_path(leg):
-    path = [(leg["end_location"]["lat"], leg["end_location"]["lng"])]
+    path = [(leg["start_location"]["lat"], leg["start_location"]["lng"])]
 
     for step in leg["steps"]:
         path = path + get_step_path(step)
 
-    path.append((leg["start_location"]["lat"], leg["start_location"]["lng"]))
+    path.append((leg["end_location"]["lat"], leg["end_location"]["lng"]))
 
     return path
 
