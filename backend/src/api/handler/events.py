@@ -4,32 +4,32 @@ from numpy.random import randint
 SOUNDSCAPE_LENGTH = 30000
 
 weather_msg = {'str_template': 'It’s {} today',
-               'rainy_sample': '',
-               'windy_sample': '',
-               'sunny_sample': '',
+               'rainy_sample': 'http://54.66.255.195:8081/cow.wav',
+               'windy_sample': 'http://54.66.255.195:8081/cat.wav',
+               'sunny_sample': 'http://54.66.255.195:8081/cow.wav',
                'sequence_num': 0}
 
 stat_msgs = {'death': {'str_template': '{} road fatalities',
-                        'high_sample': '',
-                        'low_sample': '',
+                        'high_sample': 'http://54.66.255.195:8081/cow.wav',
+                        'low_sample': 'http://54.66.255.195:8081/cow.wav',
                         'threshold': 0.5,
                         'sequence_num': 4},
 
              'major': {'str_template': '{} serious injuries',
-                        'high_sample': '',
-                        'low_sample': '',
+                        'high_sample': 'http://54.66.255.195:8081/cat.wav',
+                        'low_sample': 'http://54.66.255.195:8081/cat.wav',
                         'threshold': 0.5,
                         'sequence_num': 5},
 
              'injury': {'str_template': '{} injuries',
-                         'high_sample': '',
-                         'low_sample': '',
+                         'high_sample': 'http://54.66.255.195:8081/cow.wav',
+                         'low_sample': 'http://54.66.255.195:8081/cow.wav',
                          'threshold': 0.5,
                          'sequence_num': 6},
 
              'crashes': {'str_template': '{} crashes',
-                          'high_sample': '',
-                          'low_sample': '',
+                          'high_sample': 'http://54.66.255.195:8081/cat.wav',
+                          'low_sample': 'http://54.66.255.195:8081/cat.wav',
                           'threshold': 0.5,
                           'sequence_num': 7}
              }
