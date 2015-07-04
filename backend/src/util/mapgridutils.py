@@ -14,12 +14,14 @@ import math
 import string
 import datetime
 import random
-
+import os
 
 #The bounding box for the analysis
-b1 = (-38.9,144.5)
-b2 = (-37.35,145.5)
-GRIDSIZE = 25.0
+#b1 = (-38.9,144.5)
+#b2 = (-37.35,145.5)
+b1 = (-38.3,144.2)
+b2 = (-37.4,145.7)
+GRIDSIZE = 50.0
 STEPSIZE = GRIDSIZE/2.0
 
 
@@ -131,7 +133,7 @@ class mapGrid:
     
     def getIndices(self, lat, lon):
         if not self.inBounds(lat, lon):
-            raise Exception("requested indices for lat,lon outside bounding box")
+            raise Exception("requested indices for lat,lon outside bounding box: "+str(lat)+","+str(lon))
             
         lati = int((lat-self.minlat)/self.latstepsize)
         loni = int((lon-self.minlon)/self.lonstepsize)
@@ -151,10 +153,11 @@ class mapGrid:
 #and whack them into a mapgrid
 def loadMapGrids(bb1, bb2, lonsteps):
     res = {}
-    for f in [item for item in f in os.listdir(".") if f.lower().endwith(".csv")]:
+    for f in [item for item in os.listdir("data") if item.lower().endswith(".csv")]:
+        print "Loading "+str(f)
         layername = f.split(".")[0]
-        mgrid = mapGrid(self, bb1, bb2, lonsteps)
-        loadField(mgrid, f)
+        mgrid = mapGrid(bb1, bb2, lonsteps)
+        loadField(mgrid, "data/"+f)
         res[layername] = mgrid
 
     return res
@@ -234,7 +237,7 @@ def createAccidentCSV(accfile, mgrid, atype, csvfiletocreate, expsquares=0):
     
     #accident_no,accident_date,accident_time,accident_type,day_of_week,dca_code,light_condition,no_persons,no_persons_killed,no_persons_injured_2,no_persons_injured_3,no_persons_not_injured,no_vehicles,police_attended,road_geometry,severity,speed_zone,node_id,node_type,lga_name,latitude,longitude
     #T20130005807,2013-02-14,09:30:00,1,5,111,1,2,0,0,1,1,2,1,2,3,60,259215,I,MORELAND,-37.7051948885405,144.911505808892
-    if not atype in ["death", "injured", "accident"]:
+    if not atype in ["death", "major", "injury", "crashes", "tram"]:
         raise Exception("Dont know what to do with accident type "+str(atype))
 
     datalines = open(accfile).readlines()[1:]
@@ -249,10 +252,14 @@ def createAccidentCSV(accfile, mgrid, atype, csvfiletocreate, expsquares=0):
         val = 0.0
         if atype == "death":
             val = int(bits[8])
-        elif atype == "injured":
-            val = int(bits[9])+int(bits[10])
-        elif atype == "accident":
+        elif atype == "major":
+            val = int(bits[10])
+        elif atype == "injury":
+            val = int(bits[9]) + int(bits[10])
+        elif atype == "crashes":
             val = 1
+        elif atype == "tram":
+            val = 1 if bits[5] == "192" else 0
         else:
             raise Exception("Internal Error! "+atype)
 
@@ -284,8 +291,8 @@ def createAccidentCSV(accfile, mgrid, atype, csvfiletocreate, expsquares=0):
 def getStepsFromWayPoints(waypoints, stepsize):
     steps = [(waypoints[0][0], waypoints[0][1], 0.0)] #start with our start point at distance 0
     for i in range(0, len(waypoints)-1):
-        a = pointsonpath[i]
-        b = pointsonpath[i+1]
+        a = waypoints[i]
+        b = waypoints[i+1]
         st = getSteps(a, b, stepsize)
         steps = steps + st
     return steps
@@ -293,15 +300,41 @@ def getStepsFromWayPoints(waypoints, stepsize):
 
 
 
+def calcPathIntegral(path, mgrid):
+    steps = getStepsFromWayPoints(path, STEPSIZE)
+    
+    #now step along the path
+    oldlati, oldloni = -1, -1
+    tot = 0.0
+    for (lat, lon) in path:
+        lati, loni = mgrid.getIndices(lat, lon)
+        if lati == oldlati and loni == oldloni:
+            continue
+        else:
+            oldlati = lati
+            oldloni = loni
+            tot += mgrid[(lati, loni)]
+
+    return tot
+        
+
+
 
 #start up, read in any available data, and then calculate the the integrals along the given 
 #paths and return the result
-def testServer(paths):
+def testServer(path):
+    print "Testing.... "
     lonsteps = mapGrid.getSuggestedLonStepsForGivenLonstepSize(GRIDSIZE, b1, b2)
     #read in  all the data that we have data for
+    print "Loading map grids"
     mgrids = loadMapGrids(b1, b2, lonsteps)
     
-    #now do the path integrals and print out the results
+    #now do the path integral for each map grid
+    for mgridname in mgrids:
+        print "Calculating path integral for map grid "+str(mgridname)
+        tot = calcPathIntegral(path, mgrids[mgridname])
+        print "Total is "+str(tot)
+
 
 
 #This one writes out accident data by 
@@ -314,66 +347,31 @@ def oldTest():
     mgriddeaths = mapGrid(b1, b2, lonsteps)
     mgridinjury = mapGrid(b1, b2, lonsteps)
     mgridcrash = mapGrid(b1, b2, lonsteps)
-    print "  Processing graph to locate edges on grid"
-
-    #just for testing, overwrite the matrix with some random values
-    damp = 2 
-    for lati in range(0, mgrid.latsteps):
-        for loni in range(0, mgrid.lonsteps):
-            mgrid[(lati, loni)] = (damp+random.random())*lati + (damp+random.random())*abs(loni-mgrid.lonsteps*0.5)
-            mgrid2[(lati, loni)] = sum([1 if random.random() < 0.005 else 0 for i in range(20)]) 
+    mgridmajor = mapGrid(b1, b2, lonsteps)
+    mgridtram = mapGrid(b1, b2, lonsteps)
 
     #get the accident csvs
-    createAccidentCSV("dataraw/vic_accident_working.csv", mgrid, "death", "death.csv", expsquares=1)
-    createAccidentCSV("dataraw/vic_accident_working.csv", mgrid, "injured", "injury.csv", expsquares=1)
-    createAccidentCSV("dataraw/vic_accident_working.csv", mgrid, "accident", "accident.csv", expsquares=1)
+    for atype in ["death", "major", "injury", "crashes", "tram"]:
+        createAccidentCSV("dataraw/vic_accident_working.csv", mgrid, atype, "data/"+atype+".csv", expsquares=0)
+
     loadField(mgriddeaths, "data/death.csv")
+    loadField(mgridmajor, "data/major.csv")
     loadField(mgridinjury, "data/injury.csv")
-    loadField(mgridcrash, "data/accident.csv")
+    loadField(mgridcrash, "data/crashes.csv")
+    loadField(mgridtram, "data/tram.csv")
 
-
-
-    #now generate a path
-    pointsonpath = []
-    for p in range(0, 5): #5 points
-        lat = mgrid.minlat + random.random()*(mgrid.maxlat-mgrid.minlat)
-        lon = mgrid.minlon + random.random()*(mgrid.maxlon-mgrid.minlon)
-        pointsonpath.append((lat, lon))
-    pointsonpath.sort()
-    #print pointsonpath
-
-    #now calculate the signal along the path and plot it
-    print "Generating steps"
-    steps = getStepsFromWayPoints(pointsonpath, STEPSIZE)
-
-    #tmpf = open("tmpf.csv", "w")
-    #tmpf.write("lat,lon,dist,fxy (real),fxy (int),death,injury,accident\n")
-    print "STARTING"
-    cumdist = 0.0
-    for (lat, lon, dist) in steps:
-        cumdist += dist
-        m1 = mgriddeaths.getByLatLon(lat, lon)
-        m2 = mgridinjury.getByLatLon(lat, lon)
-        m3 = mgridcrash.getByLatLon(lat, lon)
-
-        m4=m1+m2+m3
-        if m4 > 100000000:
-            raise Exception("ha!")
-        #tmpf.write(",".join(map(str, [
-        #    lat, lon, cumdist, mgrid.getByLatLon(lat, lon), mgrid2.getByLatLon(lat, lon),
-        #    mgriddeaths.getByLatLon(lat, lon),
-        #    mgridinjury.getByLatLon(lat, lon),
-        #    mgridcrash.getByLatLon(lat, lon)
-        #    ]))+"\n")
-    #tmpf.close()
-
-    print "Done"
 
     
 
 
 
 
+#oldTest()
 
+
+
+pathstr = open("path2.txt").readlines()
+path = [map(float, line.split()) for line in pathstr]
+testServer(path)
 
 
