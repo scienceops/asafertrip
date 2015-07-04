@@ -1,7 +1,6 @@
-
-def get_path(pathData):
+def get_path(path_data):
     path = []
-    for leg in pathData["routes"][0]["legs"]:
+    for leg in path_data["routes"][0]["legs"]:
         path = path + get_leg_path(leg)
 
     return path
