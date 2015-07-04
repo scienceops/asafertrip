@@ -8,10 +8,14 @@ var samples = [{sampleUrl: "cat.wav", startTime: 0},
 
 // load the audio files
 var sources = loadSamples(audioContext, samples);
-sequenceSources(audioContext, sources);
 
+// sequence them!
+sequenceSources(sources);
+
+// loads a set of samples passed in as an array of JSON objects:
+// [{sampleUrl: <URL for sample file>,
+//   startTime: <time delay until playback when we sequence in milliseconds>}]
 function loadSamples(context, samples) {
-    // load the audio files
     var sources = [];
     samples.forEach(function (sample) {
 	sources.push({sampleUrl: sample.sampleUrl,
@@ -21,7 +25,12 @@ function loadSamples(context, samples) {
     return sources;
 }
 
-function sequenceSources(context, sources) {
+// sequences an array of pre-loaded sources using some window timers, the
+// sources are specified as:
+// [{sampleUrl: <URL for sample file>,
+//   startTime: <time delay until playback when we sequence in milliseconds>,
+//   source: <handle object for the buffered source that was connected to the audio context>}]
+function sequenceSources(sources) {
     sources.forEach(function (sourceWrapper) {
 	window.setTimeout(function () {
 	    sourceWrapper.source.start();
@@ -29,6 +38,8 @@ function sequenceSources(context, sources) {
     });
 }
 
+// loads a sample file from a given url via XHR, buffers it into a Web Audio source and connects
+// it to the given audio context
 function loadSampleFile(context, url) {
     var request = new XMLHttpRequest();
     var source = context.createBufferSource();
