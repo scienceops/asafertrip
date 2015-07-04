@@ -32,26 +32,26 @@ stat_msgs = {'death': {'str_template': '{} road fatalities',
                           'low_sample': 'http://54.66.255.195:8081/cat.wav',
                           'threshold': 0.5,
                           'sequence_num': 7}
+
+
+             'babies': {'str_template': '{} kids under five live along the way',
+                          'high_sample': 'http://54.66.255.195:8081/cat.wav',
+                          'low_sample': 'http://54.66.255.195:8081/cat.wav',
+              'threshold': 0.5,
+              'sequence_num': 1},
+
+             'kids': {'str_template': '{} children aged 5-10 live around here',
+                          'high_sample': 'http://54.66.255.195:8081/cat.wav',
+                          'low_sample': 'http://54.66.255.195:8081/cat.wav',
+              'threshold': 0.5,
+              'sequence_num': 2},
+
+             'senior': {'str_template': '{} people over 75 live this way',
+                          'high_sample': 'http://54.66.255.195:8081/cat.wav',
+                          'low_sample': 'http://54.66.255.195:8081/cat.wav',
+              'threshold': 0.5,
+              'sequence_num': 3},
              }
-
-
-#             'TODO': {'str_template': '{} kids under five live along the way',
-#              'high_sample': '',
-#              'low_sample': '',
-#              'threshold': 0.5,
-#              'sequence_num': 1},
-
-#             'TODO': {'str_template': '{} children aged 5-10 live around here',
-#              'high_sample': '',
-#              'low_sample': '',
-#              'threshold': 0.5,
-#              'sequence_num': 2},
-
-#             'TODO': {'str_template': '{} people over 75 live this way',
-#              'high_sample': '',
-#              'low_sample': '',
-#              'threshold': 0.5,
-#              'sequence_num': 3},
 
 #             'TODO': { 'str_template': '{} of collisions with trams',
 #              'high_sample': '',
