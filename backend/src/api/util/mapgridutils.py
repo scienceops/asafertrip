@@ -403,7 +403,3 @@ def fudgeFromCentroids():
 
 
 #oldTest()
-
-
-fudgeFromCentroids()
-
