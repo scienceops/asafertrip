@@ -10,7 +10,7 @@
 	 * Main module of the application.
 	 */
 	angular
-		.module('gabtSkeletonApp', [
+		.module('asafertrip', [
 			'ngAnimate',
 			'ngCookies',
 			'ngResource',
@@ -20,10 +20,6 @@
 		])
 		.config(['$routeProvider', function ($routeProvider) {
 			$routeProvider
-				.when('/', {
-					templateUrl: 'components/home/home.html',
-					controller: 'HomeCtrl'
-				})
 				.otherwise({
 					redirectTo: '/'
 				});

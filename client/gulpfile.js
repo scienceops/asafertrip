@@ -171,7 +171,7 @@ gulp.task('connect', function () {
 		},
 		middleware: function(connect) {
 			return [
-				connect.static('.tmp'),
+				connect.static('./.tmp'),
 				connect().use(
 					'/bower_components',
 					connect.static('./bower_components')
@@ -268,8 +268,7 @@ gulp.task('wiredep', function () {
 			ignorePath: /\.\.\//,
 			exclude: [
 				/jquery/,
-				'bower_components/bootstrap/dist/js/bootstrap.js',
-				'bower_components/bootstrap/dist/css/bootstrap.css'
+				'bower_components/bootstrap/dist/js/bootstrap.js'
 			]
 		}))
 		.pipe(gulp.dest(config.env.dev));
