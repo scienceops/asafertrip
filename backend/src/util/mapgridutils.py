@@ -6,7 +6,7 @@ Created on Fri Jul 3rd 11:00:05 2015
 """
 
 
-
+import sys
 import networkx
 import numpy
 import json
@@ -377,31 +377,24 @@ def fudgeFromCentroids():
     latlonval = {}
     for line in data:
         bits = line.split(",")
-        lat, lon = map(float(bits[-2],bits[-1]))
+        lat, lon = map(float, bits[-2:])
         val = float(bits[index])
 
         if not mgrid.inBounds(lat, lon):
             continue
 
-        res[lati][loni] += val
-
-    #now expand the result by expsquares squares
-    if expsquares > 0:
-        resold = res
-        res = numpy.zeros((mgrid.latsteps, mgrid.lonsteps),float)
-        for lati in range(0, mgrid.latsteps):
-            for loni in range(0, mgrid.lonsteps):
-                for latd in range(-expsquares, expsquares+1):
-                    lati2 = lati+latd
-                    for lond in range(-expsquares, expsquares+1):
-                        loni2 = loni+lond
-                        if lati2 < 0 or loni2 < 0 or lati2 >= mgrid.latsteps or loni2 >= mgrid.lonsteps:
-                            continue
-                        res[lati][loni] += resold[lati2][loni2]
-         
+        expsquares = 3
+        lati, loni = mgrid.getIndices(lat ,lon)
+        for latd in range(-expsquares, expsquares+1):
+            lati2 = lati+latd
+            for lond in range(-expsquares, expsquares+1):
+                loni2 = loni+lond
+                if lati2 < 0 or loni2 < 0 or lati2 >= mgrid.latsteps or loni2 >= mgrid.lonsteps:
+                    continue
+                res[lati2][loni2] += val/(expsquares**2)
 
     #ok, now dump out the csv in 'natural' format
-    outf = open(csvfiletocreate, "w")
+    outf = open(sys.argv[2], "w")
     for lati in range(0, mgrid.latsteps):
         line = ",".join(map(str, res[lati]))
         outf.write(line+"\n")
@@ -412,9 +405,10 @@ def fudgeFromCentroids():
 #oldTest()
 
 
+fudgeFromCentroids()
 
-pathstr = open("path2.txt").readlines()
-path = [map(float, line.split()) for line in pathstr]
-testServer(path)
+#pathstr = open("path2.txt").readlines()
+#path = [map(float, line.split()) for line in pathstr]
+#testServer(path)
 
 
