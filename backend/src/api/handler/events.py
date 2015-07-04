@@ -4,51 +4,51 @@ from numpy.random import randint
 SOUNDSCAPE_LENGTH = 30000
 
 weather_msg = {'str_template': 'It’s {} today',
-               'rainy_sample': 'http://54.66.255.195:8081/cow.wav',
-               'windy_sample': 'http://54.66.255.195:8081/cat.wav',
-               'sunny_sample': 'http://54.66.255.195:8081/cow.wav',
+               'rainy_sample': 'resources/cow.wav',
+               'windy_sample': 'resources/cat.wav',
+               'sunny_sample': 'resources/cow.wav',
                'sequence_num': 0}
 
 stat_msgs = {'death': {'str_template': '{} road fatalities',
-                        'high_sample': 'http://54.66.255.195:8081/cow.wav',
-                        'low_sample': 'http://54.66.255.195:8081/cow.wav',
+                        'high_sample': 'resources/cow.wav',
+                        'low_sample': 'resources/cow.wav',
                         'threshold': 0.5,
                         'sequence_num': 4},
 
              'major': {'str_template': '{} serious injuries',
-                        'high_sample': 'http://54.66.255.195:8081/cat.wav',
-                        'low_sample': 'http://54.66.255.195:8081/cat.wav',
+                        'high_sample': 'resources/cat.wav',
+                        'low_sample': 'resources/cat.wav',
                         'threshold': 0.5,
                         'sequence_num': 5},
 
              'injury': {'str_template': '{} injuries',
-                         'high_sample': 'http://54.66.255.195:8081/cow.wav',
-                         'low_sample': 'http://54.66.255.195:8081/cow.wav',
+                         'high_sample': 'resources/cow.wav',
+                         'low_sample': 'resources/cow.wav',
                          'threshold': 0.5,
                          'sequence_num': 6},
 
              'crashes': {'str_template': '{} crashes',
-                          'high_sample': 'http://54.66.255.195:8081/cat.wav',
-                          'low_sample': 'http://54.66.255.195:8081/cat.wav',
+                          'high_sample': 'resources/cat.wav',
+                          'low_sample': 'resources/cat.wav',
                           'threshold': 0.5,
                           'sequence_num': 7},
 
 
              'babies': {'str_template': '{} kids under five live along the way',
-                          'high_sample': 'http://54.66.255.195:8081/cat.wav',
-                          'low_sample': 'http://54.66.255.195:8081/cat.wav',
+                          'high_sample': 'resources/cat.wav',
+                          'low_sample': 'resources/cat.wav',
               'threshold': 0.5,
               'sequence_num': 1},
 
              'kids': {'str_template': '{} children aged 5-10 live around here',
-                          'high_sample': 'http://54.66.255.195:8081/cat.wav',
-                          'low_sample': 'http://54.66.255.195:8081/cat.wav',
+                          'high_sample': 'resources/cat.wav',
+                          'low_sample': 'resources/cat.wav',
               'threshold': 0.5,
               'sequence_num': 2},
 
              'senior': {'str_template': '{} people over 75 live this way',
-                          'high_sample': 'http://54.66.255.195:8081/cat.wav',
-                          'low_sample': 'http://54.66.255.195:8081/cat.wav',
+                          'high_sample': 'resources/cat.wav',
+                          'low_sample': 'resources/cat.wav',
               'threshold': 0.5,
               'sequence_num': 3}
              }
