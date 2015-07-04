@@ -361,8 +361,51 @@ def oldTest():
     loadField(mgridtram, "data/tram.csv")
 
 
-    
 
+
+
+def fudgeFromCentroids():
+    lonsteps = mapGrid.getSuggestedLonStepsForGivenLonstepSize(GRIDSIZE, b1, b2)
+    print "  Suggested number of lon steps for grid size of "+str(GRIDSIZE)+"m is "+str(lonsteps) 
+    mgrid = mapGrid(b1, b2, lonsteps)
+
+    data = open("dataraw/sa1-toddlers-kids-seniors.csv").readlines()[1:]
+    res = numpy.zeros((mgrid.latsteps, mgrid.lonsteps),float)
+
+    #sa1_7digit,toddlers,kids,seniors,latitude,longitude
+    index = int(sys.argv[1])
+    latlonval = {}
+    for line in data:
+        bits = line.split(",")
+        lat, lon = map(float(bits[-2],bits[-1]))
+        val = float(bits[index])
+
+        if not mgrid.inBounds(lat, lon):
+            continue
+
+        res[lati][loni] += val
+
+    #now expand the result by expsquares squares
+    if expsquares > 0:
+        resold = res
+        res = numpy.zeros((mgrid.latsteps, mgrid.lonsteps),float)
+        for lati in range(0, mgrid.latsteps):
+            for loni in range(0, mgrid.lonsteps):
+                for latd in range(-expsquares, expsquares+1):
+                    lati2 = lati+latd
+                    for lond in range(-expsquares, expsquares+1):
+                        loni2 = loni+lond
+                        if lati2 < 0 or loni2 < 0 or lati2 >= mgrid.latsteps or loni2 >= mgrid.lonsteps:
+                            continue
+                        res[lati][loni] += resold[lati2][loni2]
+         
+
+    #ok, now dump out the csv in 'natural' format
+    outf = open(csvfiletocreate, "w")
+    for lati in range(0, mgrid.latsteps):
+        line = ",".join(map(str, res[lati]))
+        outf.write(line+"\n")
+    outf.close()
 
 
 
