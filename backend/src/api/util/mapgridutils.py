@@ -398,5 +398,11 @@ def fudgeFromCentroids():
     outf.close()
 
 
+#create the csvs from the ABS data
+#def createABS(f):
+    #read in the lat,lon,...vals... data
+    #data = open(f)
+
+
 
 #oldTest()

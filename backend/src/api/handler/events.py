@@ -83,9 +83,16 @@ def generate_resp(tables, path, integrator):
 
     intervals = max(sequence_nos) + 1
     period = SOUNDSCAPE_LENGTH / intervals
+    
+    aggregates = {}
+    for name in names:
+        print "getting path integral for "+name
+        for (lat, lon) in path:
+            print str(lat)+" "+str(lon)
+        aggregates[name] = integrator(path, tables[name])
+        #aggregates = {name: integrator(path, tables[name]) for name in names}
 
-    aggregates = {name: integrator(path, tables[name]) for name in names}
-
+    print "Done integrating..."
     resp = [handle_weather(period)]
 
     for name, aggregate in aggregates.iteritems():
