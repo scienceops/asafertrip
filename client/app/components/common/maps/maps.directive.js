@@ -77,8 +77,24 @@
 							zoom: 8
 						};
 
+						var styles = [
+                           {
+                              featureType: "road",
+                              elementType: "labels",
+                              stylers: [
+                                { visibility: "off" }
+                              ]
+                            }
+                          ];
+
 						directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
 						map = new google.maps.Map(document.getElementById('maps'), mapOptions);
+
+
+ 						var styledMap = new google.maps.StyledMapType(styles, {name: "Styled Map"});
+						map.mapTypes.set('map_style', styledMap);
+                        map.setMapTypeId('map_style');
+
 						directionsDisplay.setMap(map);
 
 						addListeners();
