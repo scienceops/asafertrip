@@ -12,7 +12,8 @@ TABLES = {}
 
 app = Flask(__name__)
 #CORS(app, resources=r'/api/*', allow_headers='Content-Type')
-cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+#cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+cors = CORS(app)
 
 @app.route("/aggregate", methods=['POST'])
 def aggregate():
