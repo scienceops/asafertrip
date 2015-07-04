@@ -20,6 +20,10 @@ def aggregate():
     resp = generate_resp(TABLES, path, calcPathIntegral)
     return json.dumps(resp)
 
+@app.route("/test")
+def hello():
+    return json.dumps({'msg': "Hello World!"})
+
 if __name__ == "__main__":
     TABLES = loadMapGrids(B1, B2, LONG_STEPS)
     app.run()
