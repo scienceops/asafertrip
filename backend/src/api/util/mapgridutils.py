@@ -246,6 +246,10 @@ def createAccidentCSV(accfile, mgrid, atype, csvfiletocreate, expsquares=0):
             continue
         lati, loni = mgrid.getIndices(lat, lon)
 
+
+        if int(bits[1].split("-")[0]) < 2009:
+            continue
+
         val = 0.0
         if atype == "death":
             val = int(bits[8])
@@ -349,13 +353,13 @@ def oldTest():
 
     #get the accident csvs
     for atype in ["death", "major", "injury", "crashes", "tram"]:
-        createAccidentCSV("dataraw/vic_accident_working.csv", mgrid, atype, "data/"+atype+".csv", expsquares=0)
+        createAccidentCSV("dataraw/vic_accident_working.csv", mgrid, atype, "../data/"+atype+".csv", expsquares=0)
 
-    loadField(mgriddeaths, "data/death.csv")
-    loadField(mgridmajor, "data/major.csv")
-    loadField(mgridinjury, "data/injury.csv")
-    loadField(mgridcrash, "data/crashes.csv")
-    loadField(mgridtram, "data/tram.csv")
+    loadField(mgriddeaths, "../data/death.csv")
+    loadField(mgridmajor, "../data/major.csv")
+    loadField(mgridinjury, "../data/injury.csv")
+    loadField(mgridcrash, "../data/crashes.csv")
+    loadField(mgridtram, "../data/tram.csv")
 
 
 
@@ -437,7 +441,7 @@ def createABS(f):
 
 
 
-#oldTest()
+oldTest()
 
 
 #createABS("sa1-toddlers-kids-seniors-grid.csv")
