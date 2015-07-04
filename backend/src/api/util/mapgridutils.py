@@ -208,10 +208,8 @@ def loadField(mg, csvfile):
     lines = open(csvfile).readlines()
     if len(lines) != mg.latsteps:
         raise Exception("CSV file has wrong shape. Got "+str(len(lines))+" lines but expected "+str(mg.latsteps))
-    lati = mg.latsteps-1
+    lati = 0
     for line in lines:
-        if lati < 0:
-            raise Exception("Internal error")
         vals = map(float, line.split(","))
         if len(vals) != mg.lonsteps:
             raise Exception("CSV file has wrong shape. Got "+str(len(vals))+" columns but expected "+str(mg.lonsteps))
@@ -221,7 +219,7 @@ def loadField(mg, csvfile):
             mg[(lati, loni)] = vals[loni]
 
 
-        lati -= 1 
+        lati += 1 
 
         
  
