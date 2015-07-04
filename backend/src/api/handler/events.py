@@ -87,6 +87,8 @@ def generate_resp(tables, path, integrator):
     aggregates = {}
     for name in names:
         print "getting path integral for "+name
+        for (lat, lon) in path:
+            print str(lat)+" "+str(lon)
         aggregates[name] = integrator(path, tables[name])
         #aggregates = {name: integrator(path, tables[name]) for name in names}
 
