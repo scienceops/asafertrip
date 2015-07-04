@@ -31,7 +31,7 @@ stat_msgs = {'death': {'str_template': '{} road fatalities',
                           'high_sample': 'http://54.66.255.195:8081/cat.wav',
                           'low_sample': 'http://54.66.255.195:8081/cat.wav',
                           'threshold': 0.5,
-                          'sequence_num': 7}
+                          'sequence_num': 7},
 
 
              'babies': {'str_template': '{} kids under five live along the way',
@@ -50,7 +50,7 @@ stat_msgs = {'death': {'str_template': '{} road fatalities',
                           'high_sample': 'http://54.66.255.195:8081/cat.wav',
                           'low_sample': 'http://54.66.255.195:8081/cat.wav',
               'threshold': 0.5,
-              'sequence_num': 3},
+              'sequence_num': 3}
              }
 
 #             'TODO': { 'str_template': '{} of collisions with trams',
