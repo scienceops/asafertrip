@@ -2,6 +2,7 @@
 *.css.map
 *.iml
 *.idea
+.DS_Store
 
 client/node_modules
 /client/dist
