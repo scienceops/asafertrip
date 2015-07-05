@@ -9,25 +9,25 @@ weather_msg = {'str_template': 'It’s {} today',
                'sunny_sample': '/resources/0_weather/sunny.mp3',
                'sequence_num': 0}
 
-stat_msgs = {'death': {'str_template': 'There’s been {} loss of life on this journey',
+stat_msgs = {'death': {'str_template': 'Reflect on {} loss of life',
                         'high_sample': '/resources/7_fatality/fatality_hi.mp3',
                         'low_sample': '/resources/7_fatality/fatality_lo.mp3',
                         'threshold': 0.5,
                         'sequence_num': 7},
 
-             'major': {'str_template': 'And {} suffered serious injuries',
+             'major': {'str_template': '{} suffered a serious injury',
                         'high_sample': '/resources/3_serious/serious_hi.mp3',
                         'low_sample': '/resources/3_serious/serious_lo.mp3',
                         'threshold': 20,
                         'sequence_num': 3},
 
-             'injury': {'str_template': 'There have been {} injuries here',
+             'injury': {'str_template': 'Ouch, {} injuries here',
                          'high_sample': '/resources/1_injuries/injuries_hi.mp3',
                          'low_sample': '/resources/1_injuries/injuries_lo.mp3',
                          'threshold': 8,
                          'sequence_num': 1},
 
-             'crashes': {'str_template': 'There were also {} crashes',
+             'crashes': {'str_template': 'There were {} crashes',
                           'high_sample': '/resources/2_crash/crash_hi.mp3',
                           'low_sample': '/resources/2_crash/crash_lo.mp3',
                           'threshold': 70,
@@ -40,7 +40,7 @@ stat_msgs = {'death': {'str_template': 'There’s been {} loss of life on this j
               'threshold': 15,
               'sequence_num': 5},
 
-             'kids': {'str_template': 'And {} kids aged 5-14 live around here',
+             'kids': {'str_template': 'And {} kids aged 5-14 play here',
                           'high_sample': '/resources/6_kids/kids_hi.mp3',
                           'low_sample': '/resources/6_kids/kids_lo.mp3',
               'threshold': 18,
