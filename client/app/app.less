@@ -6,19 +6,9 @@
 @import "components/music/music";
 
 body {
-	&:after {
-		content: "";
-		background: url('/images/r_background_mob.jpg') repeat-y 0 0;
-		-webkit-background-size: 100%;
-		background-size: 100%;
-		opacity: 0.5;
-		top: 0;
-		left: 0;
-		bottom: 0;
-		right: 0;
-		position: absolute;
-		z-index: -1;
-	}
+	background: url('/images/r_background_mob.jpg') repeat-y 0 0;
+	-webkit-background-size: 100%;
+	background-size: 100%;
 
 	@media (max-width: @screen-xs-max) {
 		font-size: @font-size-small;
@@ -68,6 +58,14 @@ body {
 .animate-if.ng-leave,
 .animate-if.ng-enter.ng-enter-active {
 	opacity:1;
+}
+
+h1 {
+	margin-top: 0;
+
+	small {
+		font-size: 30px;
+	}
 }
 
 
