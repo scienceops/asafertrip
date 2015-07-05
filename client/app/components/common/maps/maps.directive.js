@@ -98,7 +98,14 @@
                               stylers: [
                                 { visibility: "off" }
                               ]
-                            }
+                            },
+                             {
+                              featureType: "poi",
+                              elementType: "labels",
+                              stylers: [
+                              	{ visibility: "off" }
+                                ]
+                             }
                           ];
 
 						directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers: true});
