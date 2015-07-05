@@ -16,12 +16,14 @@
 				}
 
 				musicServices.getData(function (data) {
-					if (!data) {
-
+					if (data.error == "There was an error") {
+                      $scope.isNotSupported = true;
 					}
-					 $scope.musics= data;
-
-					$scope.listen();
+					else{
+						$scope.isNotSupported = false;
+						$scope.musics= data;
+                    	$scope.listen();
+					}
 				});
             };
 
