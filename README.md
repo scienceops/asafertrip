@@ -36,11 +36,11 @@ The data was taken from home base (CSV and Shapefiles), shipped out to Postgres 
 The frontend is HTML5 and uses the AngularJS framework and Twitter Bootstrap, along with the Web Audio and Google Maps APIs. The music tracks are played based on stats returned by a custom API delivered by our Python backend.
 
 
-Demo/Homepage URL:
+## Demo/Homepage URL:
 http://asafertrip.info/
-Video URL: 
+
+## Video URL: 
 http://youtu.be/Q8tt5oiBmMc
-Datasets Used: 
+
+## Datasets Used: 
 Australian Bureau of Statistics 2011 Census Data: http://www.abs.gov.au/websitedbs/censushome.nsf/home/datapacks; VicRoads: https://www.data.vic.gov.au/data/dataset/crash-stats-data-extract
-Local Event Location:
-NSW/Sydney
