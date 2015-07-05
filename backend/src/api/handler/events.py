@@ -13,44 +13,44 @@ stat_msgs = {'death': {'str_template': '{} road fatalities',
                         'high_sample': '/resources/7_fatality/fatality_hi.mp3',
                         'low_sample': '/resources/7_fatality/fatality_lo.mp3',
                         'threshold': 0.5,
-                        'sequence_num': 4},
+                        'sequence_num': 7},
 
              'major': {'str_template': '{} serious injuries',
                         'high_sample': '/resources/3_serious/serious_hi.mp3',
                         'low_sample': '/resources/3_serious/serious_lo.mp3',
                         'threshold': 0.5,
-                        'sequence_num': 5},
+                        'sequence_num': 3},
 
              'injury': {'str_template': '{} injuries',
                          'high_sample': '/resources/1_injuries/injuries_hi.mp3',
                          'low_sample': '/resources/1_injuries/injuries_lo.mp3',
                          'threshold': 0.5,
-                         'sequence_num': 6},
+                         'sequence_num': 1},
 
              'crashes': {'str_template': '{} crashes',
                           'high_sample': '/resources/2_crash/crash_hi.mp3',
                           'low_sample': '/resources/2_crash/crash_lo.mp3',
                           'threshold': 0.5,
-                          'sequence_num': 7},
+                          'sequence_num': 2},
 
 
              'babies': {'str_template': '{} kids under five live along the way',
                           'high_sample': '/resources/5_toddlers/toddlers_hi.mp3',
                           'low_sample': '/resources/5_toddlers/toddlers_lo.mp3',
               'threshold': 0.5,
-              'sequence_num': 1},
+              'sequence_num': 5},
 
              'kids': {'str_template': '{} children aged 5-10 live around here',
                           'high_sample': '/resources/6_kids/kids_hi.mp3',
                           'low_sample': '/resources/6_kids/kids_lo.mp3',
               'threshold': 0.5,
-              'sequence_num': 2},
+              'sequence_num': 6},
 
              'senior': {'str_template': '{} people over 75 live this way',
                           'high_sample': '/resources/4_elderly/elderly_hi.mp3',
                           'low_sample': '/resources/4_elderly/elderly_lo.mp3',
               'threshold': 0.5,
-              'sequence_num': 3}
+              'sequence_num': 4}
              }
 
 #             'TODO': { 'str_template': '{} of collisions with trams',
