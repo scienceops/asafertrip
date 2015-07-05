@@ -6,7 +6,7 @@
 			return {
 				scope: {},
 				template: [
-					'<div class="spinner" ng-show="isLoading"><i class="fa fa-spin fa-spinner"></i></div>',
+					'<div class="spinner" ng-show="isLoading"></div>',
 					'<div id="maps" ng-style="mapStyle" class="google-maps"></div>'].join(''),
 				link: function (scope) {
 					var map, directionsDisplay;
