@@ -9,13 +9,13 @@ weather_msg = {'str_template': 'It’s {} today',
                'sunny_sample': '/resources/0_weather/sunny.mp3',
                'sequence_num': 0}
 
-stat_msgs = {'death': {'str_template': 'There has been {} loss of life taking this journey',
+stat_msgs = {'death': {'str_template': 'There has been {} loss of life on this journey',
                         'high_sample': '/resources/7_fatality/fatality_hi.mp3',
                         'low_sample': '/resources/7_fatality/fatality_lo.mp3',
                         'threshold': 0.5,
                         'sequence_num': 7},
 
-             'major': {'str_template': 'And {} people suffered serious injuries',
+             'major': {'str_template': 'And {} suffered serious injuries',
                         'high_sample': '/resources/3_serious/serious_hi.mp3',
                         'low_sample': '/resources/3_serious/serious_lo.mp3',
                         'threshold': 0.5,
