@@ -1,10 +1,10 @@
 var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-// our sample set - should come from the backend
-var samples = [{sampleUrl: "cat.wav", startTime: 0},
-	       {sampleUrl: "cow.wav", startTime: 3000},
-	       {sampleUrl: "cow.wav", startTime: 5000},
-	       {sampleUrl: "cat.wav", startTime: 7000}];
+//// our sample set - should come from the backend
+//var samples = [{sampleUrl: "cat.wav", startTime: 0, sentence:"sentence 1"},
+//	       {sampleUrl: "cow.wav", startTime: 3000, sentence:"sentence 2"},
+//	       {sampleUrl: "cow.wav", startTime: 5000, sentence:"sentence 3"},
+//	       {sampleUrl: "cat.wav", startTime: 7000, sentence:"sentence 4"}];
 
 // load the audio files
 var sources = loadSamples(audioContext, samples);

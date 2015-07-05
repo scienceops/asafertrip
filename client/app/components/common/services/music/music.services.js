@@ -2,21 +2,27 @@
     'use strict';
 
 	angular.module('asafertrip')
-		.factory('musicServices', [function () {
+		.factory('musicServices', ['$http', function ($http) {
+
 			return {
-				getData: function() {
-				  return  [{sampleUrl: "resources/cat.wav", startTime: 0, sentence:"sentence 1"},
-                           {sampleUrl: "resources/cow.wav", startTime: 3000, sentence:"sentence 2"},
-                           {sampleUrl: "resources/cow.wav", startTime: 5000, sentence:"sentence 3"},
-                           {sampleUrl: "resources/cat.wav", startTime: 7000, sentence:"sentence 4"}
-                          ];
+				getData: function(successHandler) {
+                	$http.post('http://54.66.255.195:8080/api/aggregate', this.mapsResponse)
+                		.success(function(data, status, headers, config) {
+                        	successHandler(data);
+                        })
+                        .error(function(data, status, headers, config) {
+//                        	console.log("error");
+                        });
 				  },
 				setLocations: function (locations) {
 					this.locations = locations;
 				},
 				getLocations: function () {
 					return this.locations;
-				}
+				},
+				setResponse: function (response) {
+                    this.mapsResponse = response;
+                },
 			}
 		}]);
 })();

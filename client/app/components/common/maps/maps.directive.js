@@ -2,7 +2,7 @@
 	'use strict';
 
 	angular.module('asafertrip')
-		.directive('googleMaps', ['googleServices', '$rootScope', function (googleServices, $rootScope) {
+		.directive('googleMaps', ['googleServices', '$rootScope', 'musicServices', function (googleServices, $rootScope, musicServices) {
 			return {
 				scope: {},
 				template: '<div id="maps" class="google-maps"></div>',
@@ -38,6 +38,8 @@
 								travelMode: google.maps.TravelMode.DRIVING
 							};
 							directionsService.route(request, function (response, status) {
+							musicServices.setResponse(response);
+
 								if (status === google.maps.DirectionsStatus.OK) {
 									hideMarkers();
 									directionsDisplay.setDirections(response);
