@@ -2,23 +2,27 @@
     'use strict';
 
 	angular.module('asafertrip')
-		.controller('MusicController', ['$scope', 'musicServices', 'audioBufferServices', '$timeout', '$interval',
-			function ($scope, musicServices, audioBufferServices, $timeout, $interval) {
+		.controller('MusicController', ['$scope', 'musicServices', 'audioBufferServices', '$timeout', '$interval', '$location',
+			function ($scope, musicServices, audioBufferServices, $timeout, $interval, $location) {
 
 			var progress;
             var init = function()  {
-            	$scope.sentences = [];
-        		$scope.locations = {};
-				musicServices.getData(function (data) {
-					$scope.musics= data;
-					 audioBufferServices.playSound($scope.musics);
-                     sequenceSentences($scope.musics);
-				});
-				$scope.increaseWidth = 0;
+
 				$scope.locations = musicServices.getLocations();
 
-				increaseProgressBar();
-				myStopFunction();
+				if (!$scope.locations) {
+					$location.path('/');
+					return
+				}
+
+				musicServices.getData(function (data) {
+					if (!data) {
+
+					}
+					 $scope.musics= data;
+
+					$scope.listen();
+				});
             };
 
             var sequenceSentences = function (sources) {
@@ -27,19 +31,34 @@
 						$scope.sentences.push(sourceWrapper.sentence);
 					}, sourceWrapper.startTime);
 				 });
-			 }
+			 };
 
 			var increaseProgressBar = function(){
                 progress = $interval(function () {
 					$scope.increaseWidth += 0.36;
+					console.log($scope.increaseWidth);
                 }, 100);
             };
 
+			$scope.listen = function () {
+				$scope.isMusicFinished = false;
+				$scope.sentences = [];
+				$scope.increaseWidth = 0;
+				audioBufferServices.playSound($scope.musics);
+				sequenceSentences($scope.musics);
+
+				increaseProgressBar();
+				myStopFunction();
+			};
+
 			var myStopFunction = function(){
 				$timeout(function(){
-					clearInterval(progress);
+					$interval.cancel(progress);
+					$scope.isMusicFinished = true;
 				}, 30000);
 			};
+
+
 
 			init();
 

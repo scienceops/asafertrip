@@ -132,7 +132,6 @@
 						scope.$apply(function () {
 							scope.isLoading = false;
 							scope.mapStyle.opacity = 1;
-							console.log('no longer loading');
 						});
 					};
 

@@ -18,5 +18,14 @@
 		 class="animate-repeat sentence text-center">
 		{{sentence}}
 	</div>
+
+	<div class="row animate-if mt-30" ng-if="isMusicFinished">
+		<div class="col-xs-6">
+			<a ng-href="#/" class="btn btn-primary btn-block">Start Over</a>
+		</div>
+		<div class="col-xs-6">
+			<div ng-click="listen()" class="btn btn-primary btn-block">Listen Again</div>
+		</div>
+	</div>
 </div>
 
