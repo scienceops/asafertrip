@@ -56,7 +56,8 @@
 
 		    return {
 				playSound: function(samples) {
-				 var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+				 var audioContext = new (window.AudioContext || window.webkitAudioContext
+				 ||window.mozAudioContext ||window.oAudioContext || window.msAudioContext)();
 
 //                 // our sample set - should come from the backend
 //                 var samples = [{sampleUrl: "cat.wav", startTime: 0, sentence:"sentence 1"},
