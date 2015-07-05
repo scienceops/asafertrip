@@ -17,7 +17,8 @@
 	<!--</div>-->
 	<!--<div class="col-xs-6">-->
 	<form class="form-horizontal col-sm-6">
-		<div ng-show="locations.origin">
+		<div ng-if="locations.origin"
+			 class="animate-if">
 			<label for="destination">To</label>
 			<input
 				id="destination"
@@ -31,16 +32,18 @@
 	</form>
 </div>
 
-<div class="row">
-	<div class="col-sm-6 col-sm-offset-3">
-		<button type="button"
-				class="btn btn-default btn-listen btn-block"
-				ng-click="submitLocations()"
-				ng-if="locations.destination && locations.origin">
-			LISTEN
-			<div class="glyphicon glyphicon-music"></div>
-		</button>
+<div class="pos-r">
+	<div ng-if="locations.destination && locations.origin"
+		 class="row listen-container animate-if">
+		<div class="col-sm-6 col-sm-offset-3">
+			<button type="button"
+					class="btn btn-default btn-listen btn-block"
+					ng-click="submitLocations()">
+				LISTEN
+				<div class="glyphicon glyphicon-music"></div>
+			</button>
+		</div>
 	</div>
 </div>
 
-<google-maps></google-maps>
+<google-maps class="pos-r"></google-maps>

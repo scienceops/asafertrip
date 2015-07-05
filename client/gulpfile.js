@@ -25,6 +25,7 @@ var gulp = require('gulp'),
 			fonts: 'fonts',
 			styles: 'styles',
 			scripts: 'scripts',
+			resources: 'resources',
 			images: 'images'
 		};
 
@@ -40,6 +41,7 @@ var gulp = require('gulp'),
 			scripts: env.dev + '/**/*.js',
 			styles: env.dev + '/**/*.less',
 			fonts: env.dev + '/fonts/**/*',
+			resources: env.dev + '/resources/**/*',
 			images: env.dev + '/images/**/*',
 			html: env.dev + '/components/**/*.html',
 			host: '0.0.0.0',
@@ -213,6 +215,11 @@ gulp.task('build-fonts', function () {
 		.pipe(gulp.dest(config.env.prod + '/' + config.basenames.fonts));
 });
 
+gulp.task('build-resources', function () {
+	return gulp.src(config.resources)
+		.pipe(gulp.dest(config.env.prod + '/' + config.basenames.resources));
+});
+
 gulp.task('build-html', function () {
 	console.log(config.html);
 	return gulp.src(config.html)
@@ -312,6 +319,7 @@ gulp.task('build', ['clean', 'dev-styles', 'dev-bstp-fonts'], function () {
 		'build-images',
 		'build-fonts',
 		'build-static',
+		'build-resources',
 		'usemin');
 });
 

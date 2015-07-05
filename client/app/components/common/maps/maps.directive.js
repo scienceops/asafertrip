@@ -5,10 +5,14 @@
 		.directive('googleMaps', ['googleServices', '$rootScope', function (googleServices, $rootScope) {
 			return {
 				scope: {},
-				template: '<div id="maps" class="google-maps"></div>',
+				template: [
+					'<div class="spinner" ng-show="isLoading"><i class="fa fa-spin fa-spinner"></i></div>',
+					'<div id="maps" ng-style="mapStyle" class="google-maps"></div>'].join(''),
 				link: function (scope) {
 					var map, directionsDisplay;
 					var markers = [];
+					scope.isLoading = false;
+					scope.mapStyle = { opacity: 1 };
 					var directionsService = new google.maps.DirectionsService();
 
 					var addListeners = function () {
@@ -17,7 +21,10 @@
 								var marker = !markers.origin? 'origin' : 'destination';
 								createMarker(marker, event.latLng);
 
+								mapLoading();
+
 								googleServices.getAddress(function (address) {
+										mapLoaded();
 										updateInput(marker, address);
 									},
 									function () {
@@ -37,14 +44,19 @@
 								destination: end,
 								travelMode: google.maps.TravelMode.DRIVING
 							};
+
+							mapLoading();
 							directionsService.route(request, function (response, status) {
 								if (status === google.maps.DirectionsStatus.OK) {
 									hideMarkers();
+
 									directionsDisplay.setDirections(response);
 
 									var leg = response.routes[ 0 ].legs[ 0 ];
 									createMarker( 'origin', leg.start_location);
 									createMarker( 'destination', leg.end_location);
+
+									mapLoaded();
 								}
 							});
 						}
@@ -74,7 +86,7 @@
 								lat: -37.813186900000000000,
 								lng: 144.962979600000040000
 							},
-							zoom: 8
+							zoom: 12
 						};
 
 						var styles = [
@@ -104,6 +116,22 @@
 						$rootScope.$broadcast('markerAdded', {marker: marker, address: address});
 
 						calcRoute();
+					};
+
+					var mapLoading = function () {
+						scope.$apply(function () {
+							scope.isLoading = true;
+							scope.mapStyle.opacity = 0.5;
+						});
+
+					};
+
+					var mapLoaded = function () {
+						scope.$apply(function () {
+							scope.isLoading = false;
+							scope.mapStyle.opacity = 1;
+							console.log('no longer loading');
+						});
 					};
 
 					scope.$on('autocompleteChanged', function (event, data) {
