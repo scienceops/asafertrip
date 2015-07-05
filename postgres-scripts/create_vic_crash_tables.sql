@@ -1,4 +1,4 @@
-
+﻿
 -- Load Accidents
 DROP TABLE IF EXISTS vic_accident;
 CREATE TABLE vic_accident
@@ -123,6 +123,16 @@ SELECT acc.accident_no, acc.accident_date, acc.accident_time, acc.accident_type,
 ANALYSE vic_accident_working;
 
 
+COPY ( 
+  SELECT accident_no, accident_date, accident_time, accident_type, day_of_week, 
+       dca_code, light_condition, no_persons, no_persons_killed, no_persons_injured_2, 
+       no_persons_injured_3, no_persons_not_injured, no_vehicles, police_attended, 
+       road_geometry, severity, speed_zone, node_id, node_type, lga_name, intersection_gid, road_ufi,
+       ST_Y(geom) AS latitude, ST_X(geom) AS longitude FROM vic_accident_working
+) TO E'C:\\minus34\\govhack2015\\data\\crash-stats\\vic\\vic_accident_working.csv' CSV HEADER; -- 102597 
+
+
+
 -- 
 -- -- Create Accidents with geometries
 -- DROP TABLE IF EXISTS vic_accident_geoms;
@@ -164,358 +174,351 @@ ANALYSE vic_accident_working;
 -- ) TO E'C:\\minus34\\govhack2015\\data\\crash-stats\\vic\\vic_accident_geoms.csv' CSV HEADER; -- 70213        
 -- 
 
-
--- Create intersection table
-
--- First create cut down road tables to use
-DROP TABLE IF EXISTS tr_road2;
-CREATE UNLOGGED TABLE tr_road2
-(
-  gid integer NOT NULL,
-  ezirdnmlbl character varying(65),
-  geom geometry(LINESTRING,4326),
-  CONSTRAINT tr_road2_pkey PRIMARY KEY (gid)
-)
-WITH (OIDS=FALSE);
-ALTER TABLE tr_road2 OWNER TO postgres;
-
-CREATE INDEX tr_road2_geom_idx ON tr_road2 USING gist(geom);
-ALTER TABLE tr_road2 CLUSTER ON tr_road2_geom_idx;
-
-insert into tr_road2
-SELECT gid, ezirdnmlbl, (ST_Dump(ST_SetSRID(geom, 4326))).geom FROM tr_road ORDER BY class_code, ezirdnmlbl;
-
-ANALYSE tr_road2;
-
-
-DROP TABLE IF EXISTS tr_road3;
-CREATE UNLOGGED TABLE tr_road3
-(
-  gid integer NOT NULL,
-  ezirdnmlbl character varying(65),
-  geom geometry(LINESTRING,4326),
-  CONSTRAINT tr_road3_pkey PRIMARY KEY (gid)
-)
-WITH (OIDS=FALSE);
-ALTER TABLE tr_road3 OWNER TO postgres;
-
-CREATE INDEX tr_road3_geom_idx ON tr_road3 USING gist(geom);
-ALTER TABLE tr_road3 CLUSTER ON tr_road3_geom_idx;
-
-insert into tr_road3
-SELECT gid, ezirdnmlbl, (ST_Dump(ST_SetSRID(geom, 4326))).geom FROM tr_road ORDER BY class_code, ezirdnmlbl;
-
-ANALYSE tr_road2;
-
-
--- Get intersections
-DROP TABLE IF EXISTS temp_road_intersections;
-CREATE UNLOGGED TABLE temp_road_intersections
-(
-  roadname varchar(60) NOT NULL,
-  geom geometry(POINT, 4326)
-) WITH (OIDS=FALSE);
-ALTER TABLE temp_road_intersections OWNER TO postgres;
-COMMIT;
-
-SELECT parsel('tr_road2' -- 460s
-      ,'gid'
-      ,'SELECT a.ezirdnmlbl, (ST_Dump(ST_Intersection(a.geom, b.geom))).geom AS geom FROM tr_road3 as a, tr_road2 as b WHERE ST_Touches(a.geom, b.geom) AND a.gid != b.gid'
-      ,'temp_road_intersections'
-      ,'r2'
-      ,6);
-
-DROP TABLE IF EXISTS tr_road2;
-DROP TABLE IF EXISTS tr_road3;
-
-ANALYSE temp_road_intersections;
-
-
-DROP TABLE IF EXISTS temp_road_intersections2;
-CREATE UNLOGGED TABLE temp_road_intersections2
-(
-  roadname varchar(60) NOT NULL,
-  latitude numeric(11,8),
-  longitude numeric(12,8)
-) WITH (OIDS=FALSE);
-ALTER TABLE temp_road_intersections2 OWNER TO postgres;
-COMMIT;
-
-INSERT INTO temp_road_intersections2 -- 46s
-SELECT DISTINCT roadname, ST_Y(geom), ST_X(geom) FROM temp_road_intersections;
-
-DROP TABLE IF EXISTS temp_road_intersections;
-
-ANALYSE temp_road_intersections2;
-
-
-DROP TABLE IF EXISTS vic_road_intersections;
-CREATE UNLOGGED TABLE vic_road_intersections
-(
-  gid serial NOT NULL,
-  intersection varchar(255) NOT NULL,
-  no_accidents smallint NULL,
-  no_persons smallint NULL,
-  no_persons_killed smallint NULL,
-  no_persons_injured_2 smallint NULL,
-  no_persons_injured_3 smallint NULL,
-  no_persons_not_injured smallint NULL,
-  no_vehicles smallint NULL,
-  police_attended smallint NULL,
-  geom geometry(POINT, 4326) NOT NULL
-) WITH (OIDS=FALSE);
-ALTER TABLE vic_road_intersections OWNER TO postgres;
-COMMIT;
-
-CREATE INDEX vic_road_intersections_geom_idx ON vic_road_intersections USING gist (geom);
-ALTER TABLE vic_road_intersections CLUSTER ON vic_road_intersections_geom_idx;
-
-INSERT INTO vic_road_intersections (intersection, geom) -- 15s
-SELECT string_agg(roadname, ' / '), ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
-  FROM temp_road_intersections2
-  GROUP BY latitude, longitude;
-
-DROP TABLE IF EXISTS temp_road_intersections2;
-
-ANALYSE vic_road_intersections;
-
-
---Nearest intersection query
-DROP TABLE IF EXISTS vic_accident_intersections;
-CREATE UNLOGGED TABLE vic_accident_intersections
-(
-  accident_no varchar(20) NOT NULL,
-  intersection_gid integer NOT NULL,
-  intersection varchar(255) NULL,
-  dist numeric(5,1) NULL,
-  geom geometry(POINT, 4326) NULL,
-  CONSTRAINT vic_accident_intersections_pkey PRIMARY KEY (accident_no)  
-) WITH (OIDS=FALSE);
-ALTER TABLE vic_accident_intersections OWNER TO postgres;
-COMMIT;
-
-CREATE INDEX vic_accident_intersections_geom_idx ON vic_accident_intersections USING gist (geom);
-ALTER TABLE vic_accident_intersections CLUSTER ON vic_accident_intersections_geom_idx;
-COMMIT;
-
---Find nearest intersection using KNN
-INSERT INTO vic_accident_intersections (accident_no, intersection_gid)
-SELECT acc.accident_no, (SELECT int.gid FROM vic_road_intersections AS int WHERE int.intersection LIKE '% / %' ORDER BY int.geom <#> acc.geom LIMIT 1) AS intersection_gid FROM vic_accident_working AS acc WHERE acc.node_type = 'I';
-
-ANALYSE vic_accident_intersections;
-
--- Update remainging fields
-UPDATE vic_accident_intersections AS accint
-  SET intersection = int.intersection,
-      dist = ST_Distance(int.geom::geography, acc.geom::geography),
-      geom = int.geom
-  FROM vic_road_intersections AS int,
-  vic_accident_working AS acc
-  WHERE accint.intersection_gid = int.gid
-  AND accint.accident_no = acc.accident_no;
-
-ANALYSE vic_accident_intersections;
-
-  
---select * from vic_accident_intersections order by dist desc limit 100;
-
-
---Update main accident table with intersection gid
-UPDATE vic_accident_working AS acc
-  SET intersection_gid = int.intersection_gid
-  FROM vic_accident_intersections AS int
-  WHERE acc.accident_no = int.accident_no;
-
-
---Update intersections with stats
-UPDATE vic_road_intersections AS rdint
-  SET no_accidents = sqt.no_accidents,
-      no_persons = sqt.no_persons,
-      no_persons_killed = sqt.no_persons_killed,
-      no_persons_injured_2 = sqt.no_persons_injured_2,
-      no_persons_injured_3 = sqt.no_persons_injured_3,
-      no_persons_not_injured = sqt.no_persons_not_injured,
-      no_vehicles = sqt.no_vehicles,
-      police_attended = sqt.police_attended
-  FROM (
-    SELECT int.gid,
-           Count(*) AS no_accidents,
-           SUM(acc.no_persons) AS no_persons,
-           SUM(acc.no_persons_killed) AS no_persons_killed,
-           SUM(acc.no_persons_injured_2) AS no_persons_injured_2,
-           SUM(acc.no_persons_injured_3) AS no_persons_injured_3,
-           SUM(acc.no_persons_not_injured) AS no_persons_not_injured,
-           SUM(acc.no_vehicles) AS no_vehicles,
-           SUM(acc.police_attended) AS police_attended
-    FROM vic_road_intersections as int,
-    vic_accident_working AS acc
-    WHERE int.gid = acc.intersection_gid
-    GROUP BY int.gid
-  ) as sqt
-  WHERE rdint.gid = sqt.gid;
-
-
---select *, ST_Y(geom) AS latitude, ST_X(geom) AS longitude from vic_road_intersections where no_persons_injured_2 IS NOT NULL order by no_persons_injured_2 desc limit 100;
-
-
-
---Nearest intersection query
-DROP TABLE IF EXISTS temp_accident_roads;
-CREATE UNLOGGED TABLE temp_accident_roads
-(
-  accident_no varchar(20) NOT NULL,
-  road_ufi integer NOT NULL,
-  dist numeric(5,1) NULL,
-  geom geometry(POINT, 4326) NULL,
-  line geometry(LINESTRING, 4326) NULL,
-  CONSTRAINT temp_accident_roads_pkey PRIMARY KEY (accident_no) 
-) WITH (OIDS=FALSE);
-ALTER TABLE temp_accident_roads OWNER TO postgres;
-
-CREATE INDEX temp_accident_roads_geom_idx ON temp_accident_roads USING gist (geom);
-CREATE INDEX temp_accident_roads_line_idx ON temp_accident_roads USING gist (line);
-ALTER TABLE temp_accident_roads CLUSTER ON temp_accident_roads_geom_idx;
-COMMIT;
-
--- SELECT acc.accident_no, rd.ufi, ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom) AS geom
---   FROM vic_accident_working AS acc, tr_road AS rd
---   WHERE ST_Intersects(ST_Buffer(acc.geom, 0.00001), ST_SetSRID(rd.geom, 4326))
---   AND acc.node_type <> 'I'
---   LIMIT 10;
-
-
---SELECT acc.accident_no, (SELECT rd.ufi FROM tr_road AS rd ORDER BY ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom) <#> acc.geom LIMIT 1) AS road_ufi FROM vic_accident_working AS acc WHERE acc.node_type <> 'I' LIMIT 10;
-
--- DROP VIEW IF EXISTS temp_view;
--- CREATE VIEW temp_view AS
--- SELECT accident_no, geom FROM vic_accident_working WHERE node_type <> 'I';
-
---SELECT acc.accident_no, (SELECT rd.ufi FROM tr_road AS rd ORDER BY ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom) <#> acc.geom LIMIT 1) AS road_ufi FROM vic_accident_working AS acc WHERE acc.node_type <> 'I' AND accident_no = 'T20060045995'
-
-SELECT parsel('vic_accident_working' -- 460s
-      ,'gid'
-      ,'SELECT acc.accident_no, (SELECT rd.ufi FROM tr_road AS rd ORDER BY ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom) <#> acc.geom LIMIT 1) AS road_ufi FROM vic_accident_working AS acc WHERE acc.node_type <> ''I'''
-      ,'temp_accident_roads'
-      ,'acc'
-      ,16);
-
--- Update remainging fields -- 50899 
-UPDATE temp_accident_roads AS accrd
-  SET geom = ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom),
-      line = ST_ShortestLine(ST_SetSRID(rd.geom, 4326), acc.geom)
-  FROM tr_road AS rd,
-  vic_accident_working AS acc
-  WHERE accrd.road_ufi = rd.ufi
-  AND accrd.accident_no = acc.accident_no;
-
-
---Output roads with accidents stats
-DROP TABLE IF EXISTS vic_accident_roads;
-CREATE UNLOGGED TABLE vic_accident_roads
-(
-  ufi integer NOT NULL,
-  no_accidents smallint NULL,
-  no_persons smallint NULL,
-  no_persons_killed smallint NULL,
-  no_persons_injured_2 smallint NULL,
-  no_persons_injured_3 smallint NULL,
-  no_persons_not_injured smallint NULL,
-  no_vehicles smallint NULL,
-  police_attended smallint NULL,
-  geom geometry(LINESTRING, 4326) NOT NULL,
-  CONSTRAINT vic_accident_roads_pkey PRIMARY KEY (ufi) 
-) WITH (OIDS=FALSE);
-ALTER TABLE vic_accident_roads OWNER TO postgres;
-
-CREATE INDEX vic_accident_roads_geom_idx ON vic_accident_roads USING gist (geom);
-ALTER TABLE vic_accident_roads CLUSTER ON vic_accident_roads_geom_idx;
-COMMIT;
-
---Insert road data
-INSERT INTO vic_accident_roads (ufi, geom) -- 34360
-SELECT DISTINCT rd.ufi, (ST_Dump(ST_SetSRID(rd.geom, 4326))).geom
-  FROM tr_road AS rd
-  INNER JOIN temp_accident_roads AS tmp
-  ON rd.ufi = tmp.road_ufi;
-
---Update Accidents with road UFI -- 50899
-UPDATE vic_accident_working AS acc
-  SET road_ufi = rd.road_ufi
-  FROM temp_accident_roads AS rd
-  WHERE acc.accident_no = rd.accident_no;
-
---DROP TABLE IF EXISTS temp_accident_roads;
-
---Update roads with stats
-UPDATE vic_accident_roads AS rdacc
-  SET no_accidents = sqt.no_accidents,
-      no_persons = sqt.no_persons,
-      no_persons_killed = sqt.no_persons_killed,
-      no_persons_injured_2 = sqt.no_persons_injured_2,
-      no_persons_injured_3 = sqt.no_persons_injured_3,
-      no_persons_not_injured = sqt.no_persons_not_injured,
-      no_vehicles = sqt.no_vehicles,
-      police_attended = sqt.police_attended
-  FROM (
-    SELECT rd.ufi,
-           Count(*) AS no_accidents,
-           SUM(acc.no_persons) AS no_persons,
-           SUM(acc.no_persons_killed) AS no_persons_killed,
-           SUM(acc.no_persons_injured_2) AS no_persons_injured_2,
-           SUM(acc.no_persons_injured_3) AS no_persons_injured_3,
-           SUM(acc.no_persons_not_injured) AS no_persons_not_injured,
-           SUM(acc.no_vehicles) AS no_vehicles,
-           SUM(acc.police_attended) AS police_attended
-    FROM vic_accident_roads as rd,
-    vic_accident_working AS acc
-    WHERE rd.ufi = acc.road_ufi
-    GROUP BY rd.ufi
-  ) as sqt
-  WHERE rdacc.ufi = sqt.ufi;
-
-ANALYSE vic_accident_roads;
-
-
---select node_type, Count(*) from vic_accident_working group by node_type;
-
-
-
-
-
---select * from temp_accident_roads;
-
-
-
---select SUM(no_accidents) from vic_road_intersections;
-
---Killed at intersections -- 630
-select SUM(no_persons_killed) from vic_road_intersections;
---Killed along roads -- 2231
-select SUM(no_persons_killed) from vic_accident_working;
-
---Seriously injured at intersections -- 21525
-select SUM(no_persons_injured_2) from vic_road_intersections;
---Seriously injured along roads -- 46758
-select SUM(no_persons_injured_2) from vic_accident_working;
-
---Injured at intersections -- 45300
-select SUM(no_persons_injured_3) from vic_road_intersections;
---Injured along roads -- 83920
-select SUM(no_persons_injured_3) from vic_accident_working;
-
-
-
-
-
-
 -- 
--- COPY ( 
---   SELECT accident_no, accident_date, accident_time, accident_type, day_of_week, 
---        dca_code, light_condition, no_persons, no_persons_killed, no_persons_injured_2, 
---        no_persons_injured_3, no_persons_not_injured, no_vehicles, police_attended, 
---        road_geometry, severity, speed_zone, node_id, node_type, lga_name, intersection_gid, road_ufi,
---        ST_Y(geom) AS latitude, ST_X(geom) AS longitude FROM vic_accident_working
--- ) TO E'C:\\minus34\\govhack2015\\data\\crash-stats\\vic\\vic_accident_working.csv' CSV HEADER; -- 102597 
+-- -- Create intersection table
+-- 
+-- -- First create cut down road tables to use
+-- DROP TABLE IF EXISTS tr_road2;
+-- CREATE UNLOGGED TABLE tr_road2
+-- (
+--   gid integer NOT NULL,
+--   ezirdnmlbl character varying(65),
+--   geom geometry(LINESTRING,4326),
+--   CONSTRAINT tr_road2_pkey PRIMARY KEY (gid)
+-- )
+-- WITH (OIDS=FALSE);
+-- ALTER TABLE tr_road2 OWNER TO postgres;
+-- 
+-- CREATE INDEX tr_road2_geom_idx ON tr_road2 USING gist(geom);
+-- ALTER TABLE tr_road2 CLUSTER ON tr_road2_geom_idx;
+-- 
+-- insert into tr_road2
+-- SELECT gid, ezirdnmlbl, (ST_Dump(ST_SetSRID(geom, 4326))).geom FROM tr_road ORDER BY class_code, ezirdnmlbl;
+-- 
+-- ANALYSE tr_road2;
+-- 
+-- 
+-- DROP TABLE IF EXISTS tr_road3;
+-- CREATE UNLOGGED TABLE tr_road3
+-- (
+--   gid integer NOT NULL,
+--   ezirdnmlbl character varying(65),
+--   geom geometry(LINESTRING,4326),
+--   CONSTRAINT tr_road3_pkey PRIMARY KEY (gid)
+-- )
+-- WITH (OIDS=FALSE);
+-- ALTER TABLE tr_road3 OWNER TO postgres;
+-- 
+-- CREATE INDEX tr_road3_geom_idx ON tr_road3 USING gist(geom);
+-- ALTER TABLE tr_road3 CLUSTER ON tr_road3_geom_idx;
+-- 
+-- insert into tr_road3
+-- SELECT gid, ezirdnmlbl, (ST_Dump(ST_SetSRID(geom, 4326))).geom FROM tr_road ORDER BY class_code, ezirdnmlbl;
+-- 
+-- ANALYSE tr_road2;
+-- 
+-- 
+-- -- Get intersections
+-- DROP TABLE IF EXISTS temp_road_intersections;
+-- CREATE UNLOGGED TABLE temp_road_intersections
+-- (
+--   roadname varchar(60) NOT NULL,
+--   geom geometry(POINT, 4326)
+-- ) WITH (OIDS=FALSE);
+-- ALTER TABLE temp_road_intersections OWNER TO postgres;
+-- COMMIT;
+-- 
+-- SELECT parsel('tr_road2' -- 460s
+--       ,'gid'
+--       ,'SELECT a.ezirdnmlbl, (ST_Dump(ST_Intersection(a.geom, b.geom))).geom AS geom FROM tr_road3 as a, tr_road2 as b WHERE ST_Touches(a.geom, b.geom) AND a.gid != b.gid'
+--       ,'temp_road_intersections'
+--       ,'r2'
+--       ,6);
+-- 
+-- DROP TABLE IF EXISTS tr_road2;
+-- DROP TABLE IF EXISTS tr_road3;
+-- 
+-- ANALYSE temp_road_intersections;
+-- 
+-- 
+-- DROP TABLE IF EXISTS temp_road_intersections2;
+-- CREATE UNLOGGED TABLE temp_road_intersections2
+-- (
+--   roadname varchar(60) NOT NULL,
+--   latitude numeric(11,8),
+--   longitude numeric(12,8)
+-- ) WITH (OIDS=FALSE);
+-- ALTER TABLE temp_road_intersections2 OWNER TO postgres;
+-- COMMIT;
+-- 
+-- INSERT INTO temp_road_intersections2 -- 46s
+-- SELECT DISTINCT roadname, ST_Y(geom), ST_X(geom) FROM temp_road_intersections;
+-- 
+-- DROP TABLE IF EXISTS temp_road_intersections;
+-- 
+-- ANALYSE temp_road_intersections2;
+-- 
+-- 
+-- DROP TABLE IF EXISTS vic_road_intersections;
+-- CREATE UNLOGGED TABLE vic_road_intersections
+-- (
+--   gid serial NOT NULL,
+--   intersection varchar(255) NOT NULL,
+--   no_accidents smallint NULL,
+--   no_persons smallint NULL,
+--   no_persons_killed smallint NULL,
+--   no_persons_injured_2 smallint NULL,
+--   no_persons_injured_3 smallint NULL,
+--   no_persons_not_injured smallint NULL,
+--   no_vehicles smallint NULL,
+--   police_attended smallint NULL,
+--   geom geometry(POINT, 4326) NOT NULL
+-- ) WITH (OIDS=FALSE);
+-- ALTER TABLE vic_road_intersections OWNER TO postgres;
+-- COMMIT;
+-- 
+-- CREATE INDEX vic_road_intersections_geom_idx ON vic_road_intersections USING gist (geom);
+-- ALTER TABLE vic_road_intersections CLUSTER ON vic_road_intersections_geom_idx;
+-- 
+-- INSERT INTO vic_road_intersections (intersection, geom) -- 15s
+-- SELECT string_agg(roadname, ' / '), ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
+--   FROM temp_road_intersections2
+--   GROUP BY latitude, longitude;
+-- 
+-- DROP TABLE IF EXISTS temp_road_intersections2;
+-- 
+-- ANALYSE vic_road_intersections;
+-- 
+-- 
+-- --Nearest intersection query
+-- DROP TABLE IF EXISTS vic_accident_intersections;
+-- CREATE UNLOGGED TABLE vic_accident_intersections
+-- (
+--   accident_no varchar(20) NOT NULL,
+--   intersection_gid integer NOT NULL,
+--   intersection varchar(255) NULL,
+--   dist numeric(5,1) NULL,
+--   geom geometry(POINT, 4326) NULL,
+--   CONSTRAINT vic_accident_intersections_pkey PRIMARY KEY (accident_no)  
+-- ) WITH (OIDS=FALSE);
+-- ALTER TABLE vic_accident_intersections OWNER TO postgres;
+-- COMMIT;
+-- 
+-- CREATE INDEX vic_accident_intersections_geom_idx ON vic_accident_intersections USING gist (geom);
+-- ALTER TABLE vic_accident_intersections CLUSTER ON vic_accident_intersections_geom_idx;
+-- COMMIT;
+-- 
+-- --Find nearest intersection using KNN
+-- INSERT INTO vic_accident_intersections (accident_no, intersection_gid)
+-- SELECT acc.accident_no, (SELECT int.gid FROM vic_road_intersections AS int WHERE int.intersection LIKE '% / %' ORDER BY int.geom <#> acc.geom LIMIT 1) AS intersection_gid FROM vic_accident_working AS acc WHERE acc.node_type = 'I';
+-- 
+-- ANALYSE vic_accident_intersections;
+-- 
+-- -- Update remainging fields
+-- UPDATE vic_accident_intersections AS accint
+--   SET intersection = int.intersection,
+--       dist = ST_Distance(int.geom::geography, acc.geom::geography),
+--       geom = int.geom
+--   FROM vic_road_intersections AS int,
+--   vic_accident_working AS acc
+--   WHERE accint.intersection_gid = int.gid
+--   AND accint.accident_no = acc.accident_no;
+-- 
+-- ANALYSE vic_accident_intersections;
+-- 
+--   
+-- --select * from vic_accident_intersections order by dist desc limit 100;
+-- 
+-- 
+-- --Update main accident table with intersection gid
+-- UPDATE vic_accident_working AS acc
+--   SET intersection_gid = int.intersection_gid
+--   FROM vic_accident_intersections AS int
+--   WHERE acc.accident_no = int.accident_no;
+-- 
+-- 
+-- --Update intersections with stats
+-- UPDATE vic_road_intersections AS rdint
+--   SET no_accidents = sqt.no_accidents,
+--       no_persons = sqt.no_persons,
+--       no_persons_killed = sqt.no_persons_killed,
+--       no_persons_injured_2 = sqt.no_persons_injured_2,
+--       no_persons_injured_3 = sqt.no_persons_injured_3,
+--       no_persons_not_injured = sqt.no_persons_not_injured,
+--       no_vehicles = sqt.no_vehicles,
+--       police_attended = sqt.police_attended
+--   FROM (
+--     SELECT int.gid,
+--            Count(*) AS no_accidents,
+--            SUM(acc.no_persons) AS no_persons,
+--            SUM(acc.no_persons_killed) AS no_persons_killed,
+--            SUM(acc.no_persons_injured_2) AS no_persons_injured_2,
+--            SUM(acc.no_persons_injured_3) AS no_persons_injured_3,
+--            SUM(acc.no_persons_not_injured) AS no_persons_not_injured,
+--            SUM(acc.no_vehicles) AS no_vehicles,
+--            SUM(acc.police_attended) AS police_attended
+--     FROM vic_road_intersections as int,
+--     vic_accident_working AS acc
+--     WHERE int.gid = acc.intersection_gid
+--     GROUP BY int.gid
+--   ) as sqt
+--   WHERE rdint.gid = sqt.gid;
+-- 
+-- 
+-- --select *, ST_Y(geom) AS latitude, ST_X(geom) AS longitude from vic_road_intersections where no_persons_injured_2 IS NOT NULL order by no_persons_injured_2 desc limit 100;
+-- 
+-- 
+-- 
+-- --Nearest intersection query
+-- DROP TABLE IF EXISTS temp_accident_roads;
+-- CREATE UNLOGGED TABLE temp_accident_roads
+-- (
+--   accident_no varchar(20) NOT NULL,
+--   road_ufi integer NOT NULL,
+--   dist numeric(5,1) NULL,
+--   geom geometry(POINT, 4326) NULL,
+--   line geometry(LINESTRING, 4326) NULL,
+--   CONSTRAINT temp_accident_roads_pkey PRIMARY KEY (accident_no) 
+-- ) WITH (OIDS=FALSE);
+-- ALTER TABLE temp_accident_roads OWNER TO postgres;
+-- 
+-- CREATE INDEX temp_accident_roads_geom_idx ON temp_accident_roads USING gist (geom);
+-- CREATE INDEX temp_accident_roads_line_idx ON temp_accident_roads USING gist (line);
+-- ALTER TABLE temp_accident_roads CLUSTER ON temp_accident_roads_geom_idx;
+-- COMMIT;
+-- 
+-- -- SELECT acc.accident_no, rd.ufi, ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom) AS geom
+-- --   FROM vic_accident_working AS acc, tr_road AS rd
+-- --   WHERE ST_Intersects(ST_Buffer(acc.geom, 0.00001), ST_SetSRID(rd.geom, 4326))
+-- --   AND acc.node_type <> 'I'
+-- --   LIMIT 10;
+-- 
+-- 
+-- --SELECT acc.accident_no, (SELECT rd.ufi FROM tr_road AS rd ORDER BY ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom) <#> acc.geom LIMIT 1) AS road_ufi FROM vic_accident_working AS acc WHERE acc.node_type <> 'I' LIMIT 10;
+-- 
+-- -- DROP VIEW IF EXISTS temp_view;
+-- -- CREATE VIEW temp_view AS
+-- -- SELECT accident_no, geom FROM vic_accident_working WHERE node_type <> 'I';
+-- 
+-- --SELECT acc.accident_no, (SELECT rd.ufi FROM tr_road AS rd ORDER BY ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom) <#> acc.geom LIMIT 1) AS road_ufi FROM vic_accident_working AS acc WHERE acc.node_type <> 'I' AND accident_no = 'T20060045995'
+-- 
+-- SELECT parsel('vic_accident_working' -- 460s
+--       ,'gid'
+--       ,'SELECT acc.accident_no, (SELECT rd.ufi FROM tr_road AS rd ORDER BY ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom) <#> acc.geom LIMIT 1) AS road_ufi FROM vic_accident_working AS acc WHERE acc.node_type <> ''I'''
+--       ,'temp_accident_roads'
+--       ,'acc'
+--       ,16);
+-- 
+-- -- Update remainging fields -- 50899 
+-- UPDATE temp_accident_roads AS accrd
+--   SET geom = ST_ClosestPoint(ST_SetSRID(rd.geom, 4326), acc.geom),
+--       line = ST_ShortestLine(ST_SetSRID(rd.geom, 4326), acc.geom)
+--   FROM tr_road AS rd,
+--   vic_accident_working AS acc
+--   WHERE accrd.road_ufi = rd.ufi
+--   AND accrd.accident_no = acc.accident_no;
+-- 
+-- 
+-- --Output roads with accidents stats
+-- DROP TABLE IF EXISTS vic_accident_roads;
+-- CREATE UNLOGGED TABLE vic_accident_roads
+-- (
+--   ufi integer NOT NULL,
+--   no_accidents smallint NULL,
+--   no_persons smallint NULL,
+--   no_persons_killed smallint NULL,
+--   no_persons_injured_2 smallint NULL,
+--   no_persons_injured_3 smallint NULL,
+--   no_persons_not_injured smallint NULL,
+--   no_vehicles smallint NULL,
+--   police_attended smallint NULL,
+--   geom geometry(LINESTRING, 4326) NOT NULL,
+--   CONSTRAINT vic_accident_roads_pkey PRIMARY KEY (ufi) 
+-- ) WITH (OIDS=FALSE);
+-- ALTER TABLE vic_accident_roads OWNER TO postgres;
+-- 
+-- CREATE INDEX vic_accident_roads_geom_idx ON vic_accident_roads USING gist (geom);
+-- ALTER TABLE vic_accident_roads CLUSTER ON vic_accident_roads_geom_idx;
+-- COMMIT;
+-- 
+-- --Insert road data
+-- INSERT INTO vic_accident_roads (ufi, geom) -- 34360
+-- SELECT DISTINCT rd.ufi, (ST_Dump(ST_SetSRID(rd.geom, 4326))).geom
+--   FROM tr_road AS rd
+--   INNER JOIN temp_accident_roads AS tmp
+--   ON rd.ufi = tmp.road_ufi;
+-- 
+-- --Update Accidents with road UFI -- 50899
+-- UPDATE vic_accident_working AS acc
+--   SET road_ufi = rd.road_ufi
+--   FROM temp_accident_roads AS rd
+--   WHERE acc.accident_no = rd.accident_no;
+-- 
+-- --DROP TABLE IF EXISTS temp_accident_roads;
+-- 
+-- --Update roads with stats
+-- UPDATE vic_accident_roads AS rdacc
+--   SET no_accidents = sqt.no_accidents,
+--       no_persons = sqt.no_persons,
+--       no_persons_killed = sqt.no_persons_killed,
+--       no_persons_injured_2 = sqt.no_persons_injured_2,
+--       no_persons_injured_3 = sqt.no_persons_injured_3,
+--       no_persons_not_injured = sqt.no_persons_not_injured,
+--       no_vehicles = sqt.no_vehicles,
+--       police_attended = sqt.police_attended
+--   FROM (
+--     SELECT rd.ufi,
+--            Count(*) AS no_accidents,
+--            SUM(acc.no_persons) AS no_persons,
+--            SUM(acc.no_persons_killed) AS no_persons_killed,
+--            SUM(acc.no_persons_injured_2) AS no_persons_injured_2,
+--            SUM(acc.no_persons_injured_3) AS no_persons_injured_3,
+--            SUM(acc.no_persons_not_injured) AS no_persons_not_injured,
+--            SUM(acc.no_vehicles) AS no_vehicles,
+--            SUM(acc.police_attended) AS police_attended
+--     FROM vic_accident_roads as rd,
+--     vic_accident_working AS acc
+--     WHERE rd.ufi = acc.road_ufi
+--     GROUP BY rd.ufi
+--   ) as sqt
+--   WHERE rdacc.ufi = sqt.ufi;
+-- 
+-- ANALYSE vic_accident_roads;
+-- 
+-- 
+-- --select node_type, Count(*) from vic_accident_working group by node_type;
+-- 
+-- 
+-- 
+-- 
+-- 
+-- --select * from temp_accident_roads;
+-- 
+-- 
+-- 
+-- --select SUM(no_accidents) from vic_road_intersections;
+-- 
+-- --Killed at intersections -- 630
+-- select SUM(no_persons_killed) from vic_road_intersections;
+-- --Killed along roads -- 2231
+-- select SUM(no_persons_killed) from vic_accident_working;
+-- 
+-- --Seriously injured at intersections -- 21525
+-- select SUM(no_persons_injured_2) from vic_road_intersections;
+-- --Seriously injured along roads -- 46758
+-- select SUM(no_persons_injured_2) from vic_accident_working;
+-- 
+-- --Injured at intersections -- 45300
+-- select SUM(no_persons_injured_3) from vic_road_intersections;
+-- --Injured along roads -- 83920
+-- select SUM(no_persons_injured_3) from vic_accident_working;
+
+
+
+
+
+
+
 
 
 
