@@ -9,12 +9,14 @@
             var init = function()  {
             	$scope.sentences = [];
         		$scope.locations = {};
-				$scope.musics= musicServices.getData();
+				musicServices.getData(function (data) {
+					$scope.musics= data;
+					 audioBufferServices.playSound($scope.musics);
+                     sequenceSentences($scope.musics);
+				});
 				$scope.increaseWidth = 0;
 				$scope.locations = musicServices.getLocations();
 
-				audioBufferServices.playSound($scope.musics);
-				sequenceSentences($scope.musics);
 				increaseProgressBar();
 				myStopFunction();
             };
