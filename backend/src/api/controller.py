@@ -24,7 +24,8 @@ def aggregate():
         resp = generate_resp(TABLES, path, calcPathIntegral)
         print "Generate json response"
         return json.dumps(resp)
-    except Exception:
+    except Exception, a:
+        print a
         return json.dumps({'error' : "There was an error"})        
 
 @app.route("/test")
