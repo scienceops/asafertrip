@@ -6,21 +6,30 @@ def get_path(path_data):
     return path
 
 def get_leg_path(leg):
-    path = [(leg["start_location"]["A"], leg["start_location"]["F"])]
+    lat = min(leg["start_location"].values())
+    lon = max(leg["start_location"].values())
+    path = [(lat, lon)]
 
     for step in leg["steps"]:
         path = path + get_step_path(step)
 
-    path.append((leg["end_location"]["A"], leg["end_location"]["F"]))
+    lat = min(leg["end_location"].values())
+    lon = max(leg["end_location"].values())
+    path.append((lat, lon))
 
     return path
 
 def get_step_path(step):
-    path = [(step["start_location"]["A"], step["start_location"]["F"])]
+    lat = min(step["start_location"].values())
+    lon = max(step["start_location"].values())
+
+    path = [(lat,lon)]
 
     path = path + decode(step["polyline"]["points"])
 
-    path.append((step["end_location"]["A"], step["end_location"]["F"]))
+    lat = min(step["end_location"].values())
+    lon = max(step["end_location"].values())
+    path.append((lat, lon))
 
     return path
 
