@@ -18,7 +18,9 @@ cors = CORS(app)
 @app.route("/aggregate", methods=['POST'])
 def aggregate():
     try:
-        print "Getting path for GoogleMaps request"
+        print "Getting path for GoogleMaps request: "
+        print request
+        print request.get_json()
         path = gmaps.get_path(request.get_json())
         print "Generate response using calcPathIntegral"
         resp = generate_resp(TABLES, path, calcPathIntegral)
